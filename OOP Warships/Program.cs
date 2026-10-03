@@ -8,7 +8,7 @@ namespace OOP_Warships
     class Program
     {
 
-        const string TrainingGame = "Training.txt";
+        const string TrainingGame = "Training.txt";// Constant string for the training game file name
 
         private static void GetRowColumn(ref int Row, ref int Column, ref string Mtype)
         {
@@ -91,7 +91,7 @@ namespace OOP_Warships
         {
            
 
-            GameBoard Board = new GameBoard();
+            GameBoard Board = new GameBoard();// Create a new game board
 
             int MenuOption = 0;
             while (MenuOption != 9)
@@ -125,8 +125,8 @@ namespace OOP_Warships
 
     class Missile
     {
-        protected int startRow;
-        protected int startCol;
+        protected int startRow;// Store the starting row of the missile
+        protected int startCol;// Store the starting column of the missile
 
         public virtual void Fire(int row, int col, GameBoard Board)
         {
@@ -169,8 +169,8 @@ namespace OOP_Warships
 
     class GameBoard
     {
-        private char[,] Board = new char[10, 10];
-        public Ship[] Ships = new Ship[5];
+        private char[,] Board = new char[10, 10];// 2D array to hold the board
+        public Ship[] Ships = new Ship[5];// Array to hold the ships
 
         private int Hits = 0; // Strike Rate and hit and miss calculation
         private int Misses = 0;
@@ -246,19 +246,26 @@ namespace OOP_Warships
             }
             else
             {
-                foreach (Ship ThisShip in Ships)
+                foreach (Ship ThisShip in Ships)// Loop through the ships to find which one was hit
                 {
-                    if (ThisShip.GetShipType() == Board[Row, Column])
+                    if (ThisShip.GetShipType() == Board[Row, Column])// Check if the ship type matches the board location
                     {
                         Console.WriteLine("Hit a " + ThisShip.GetName() + " at (" + Column + "," + Row + ").");
+
+                        if (ThisShip.GetHitCount() == ThisShip.GetSize())// Check if the ship has been sunk
+                        {
+                            Console.WriteLine("You have sunk the " + ThisShip.GetName() + "!");
+                        }
                     }
+                    ThisShip.AddHit();// Add a hit to the ship
+
                 }
-                Board[Row, Column]= 'h';
-                Hits++;
             }
+            Board[Row, Column] = 'h';// Mark the board location as hit
+            Hits++;
             if (Hits + Misses > 0)
             {
-                double StrikeRate = (double)Hits / (Hits + Misses) * 100;
+                double StrikeRate = (double)Hits / (Hits + Misses) * 100;// Calculate the strike rate
                 Console.WriteLine("Strike Rate: {0:F2}%", StrikeRate);
             }
         }
@@ -392,14 +399,14 @@ namespace OOP_Warships
 
     class Ship
     {
-        private string _Name;
+        private string _Name;// Store the name of the ship
+        private int _Size;// Store the size of the ship
+        private int _HitCount = 0;// Store the number of hits the ship has taken
 
         public string GetName()
         {
             return _Name;
         }
-
-        private int _Size;
 
         public int GetSize()
         {
@@ -409,7 +416,17 @@ namespace OOP_Warships
 
         public char GetShipType()
         {
-            return _Name[0];
+            return _Name[0]; // Uses the first letter of the ship name as its board symbol
+        }
+
+        public int GetHitCount()
+        {
+            return _HitCount;
+        }
+
+        public void AddHit()
+        {
+            _HitCount++;
         }
 
         public Ship()
@@ -422,6 +439,8 @@ namespace OOP_Warships
             _Size = ShipSize;
         }
 
-
     }
+
 }
+
+
