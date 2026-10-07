@@ -5,7 +5,7 @@ using System;
 using System.IO;
 namespace OOP_Warships
 {
-    class Program
+    class Program //Controls the overall game flow and user interaction(Run the Game)
     {
 
         const string TrainingGame = "Training.txt";// Constant string for the training game file name
@@ -46,6 +46,8 @@ namespace OOP_Warships
             Console.WriteLine("1. Start new game");
             Console.WriteLine("2. Load training game");
             Console.WriteLine("3. Quit");
+            Console.WriteLine("4. Save game");
+            Console.WriteLine("5. Load saved game");
             Console.WriteLine();
         }
 
@@ -123,7 +125,7 @@ namespace OOP_Warships
 
 
 
-    class Missile
+    class Missile //Represents a normal single-square weapon(Normal shot)
     {
         protected int startRow;// Store the starting row of the missile
         protected int startCol;// Store the starting column of the missile
@@ -139,7 +141,7 @@ namespace OOP_Warships
 
 
 
-    class Bomb : Missile
+    class Bomb : Missile //A specialised Missile that attacks several squares(Area attack)
     {
         private int blastRadius;
 
@@ -167,7 +169,7 @@ namespace OOP_Warships
 
 
 
-    class GameBoard
+    class GameBoard //Stores and manages the board, ships, hits, misses and game rules(Controls the battlefield)
     {
         private char[,] Board = new char[10, 10];// 2D array to hold the board
         public Ship[] Ships = new Ship[5];// Array to hold the ships
@@ -231,43 +233,102 @@ namespace OOP_Warships
             }
         }
 
-        public void CheckLocation(int Row, int Column)// Strike Rate and hit and miss calculation
+        public void CheckLocation(int Row, int Column)
         {
-            
-            if (Board[Row, Column] == 'm' || Board[Row, Column] == 'h' || Board[Row, Column] == '-')
+            if (Board[Row, Column] == '-')
             {
-                if (Board[Row, Column]  == '-')
+                if (NearMiss(Row, Column))
                 {
-                    Board[Row, Column] ='m';
+                    Board[Row, Column] = 'n';
                     Misses++;
+                    Console.WriteLine("Near miss! A ship is nearby.");
                 }
-                Console.WriteLine("Sorry, (" + Row + "," + Column + ") is a miss.");
-                
+                else
+                {
+                    Board[Row, Column] = 'm';
+                    Misses++;
+                    Console.WriteLine("Sorry, this is a miss.");
+                }
+            }
+            else if (Board[Row, Column] == 'm' ||
+                     Board[Row, Column] == 'h' ||
+                     Board[Row, Column] == 'n')
+            {
+                Console.WriteLine("You have already fired at this location.");
             }
             else
             {
-                foreach (Ship ThisShip in Ships)// Loop through the ships to find which one was hit
+                foreach (Ship ThisShip in Ships)
                 {
-                    if (ThisShip.GetShipType() == Board[Row, Column])// Check if the ship type matches the board location
+                    if (ThisShip.GetShipType() == Board[Row, Column])
                     {
-                        Console.WriteLine("Hit a " + ThisShip.GetName() + " at (" + Column + "," + Row + ").");
+                        Console.WriteLine("Hit a " + ThisShip.GetName() +
+                                          " at (" + Column + "," + Row + ").");
 
-                        if (ThisShip.GetHitCount() == ThisShip.GetSize())// Check if the ship has been sunk
+                        ThisShip.AddHit();
+
+                        if (ThisShip.GetHitCount() == ThisShip.GetSize())
                         {
                             Console.WriteLine("You have sunk the " + ThisShip.GetName() + "!");
                         }
                     }
-                    ThisShip.AddHit();// Add a hit to the ship
-
                 }
+
+                Board[Row, Column] = 'h';
+                Hits++;
             }
-            Board[Row, Column] = 'h';// Mark the board location as hit
-            Hits++;
+
             if (Hits + Misses > 0)
             {
-                double StrikeRate = (double)Hits / (Hits + Misses) * 100;// Calculate the strike rate
+                double StrikeRate = (double)Hits / (Hits + Misses) * 100;
                 Console.WriteLine("Strike Rate: {0:F2}%", StrikeRate);
             }
+        }
+        public void SaveBoard()// Save the current state of the board to a text file
+        {
+            StreamWriter writer = new StreamWriter("save.txt");
+
+            for (int Row = 0; Row < 10; Row++)
+            {
+                for (int Column = 0; Column < 10; Column++)
+                {
+                    writer.Write(Board[Row, Column]);
+                }
+
+                writer.WriteLine();
+            }
+
+            writer.Close();
+        }
+        public void LoadBoardFromFile(string filename)// Load the state of the board from a text file
+        {
+            StreamReader reader = new StreamReader(filename);
+            for (int Row = 0; Row < 10; Row++)
+            {
+                string line = reader.ReadLine();
+                for (int Column = 0; Column < 10; Column++)
+                {
+                    Board[Row, Column] = line[Column];
+                }
+            }
+            reader.Close();
+        }
+        public bool NearMiss(int Row, int Column)// Check if the location is near a ship
+        {
+            for (int r = Row - 1; r <= Row + 1; r++)
+            {
+                for (int c = Column - 1; c <= Column + 1; c++)
+                {
+                    if (r >= 0 && r < 10 && c >= 0 && c < 10)
+                    {
+                        if (Board[r, c] == 'A' || Board[r, c] == 'B' || Board[r, c] == 'S' || Board[r, c] == 'D' || Board[r, c] == 'P')
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         public void SetLocation(int Row, int Column, char Value)
@@ -397,7 +458,7 @@ namespace OOP_Warships
     }
 
 
-    class Ship
+    class Ship //Stores information about one individual ship(Represents one ship)
     {
         private string _Name;// Store the name of the ship
         private int _Size;// Store the size of the ship
