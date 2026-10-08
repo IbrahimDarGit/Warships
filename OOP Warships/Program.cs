@@ -13,28 +13,39 @@ namespace OOP_Warships
         private static void GetRowColumn(ref int Row, ref int Column, ref string Mtype)
         {
             Console.WriteLine();
-            Console.Write("Please enter type (M) missile, (B) Bomb: ");
-            Mtype = (Console.ReadLine().ToUpper());
 
-            Console.Write("Please enter column: ");
-            Column = Convert.ToInt32(Console.ReadLine());
-            Console.Write("Please enter row: ");
-            Row = Convert.ToInt32(Console.ReadLine());
+            Console.Write("Please enter type (M) missile, (B) Bomb, (T) Torpedo: ");
+            Mtype = Console.ReadLine().ToUpper();
+
+            if (Mtype == "T")
+            {
+                Console.Write("Please enter row: ");
+                Row = Convert.ToInt32(Console.ReadLine());
+            }
+            else
+            {
+                Console.Write("Please enter column: ");
+                Column = Convert.ToInt32(Console.ReadLine());
+
+                Console.Write("Please enter row: ");
+                Row = Convert.ToInt32(Console.ReadLine());
+            }
+
             Console.WriteLine();
 
-            if (Row < 0 || Row > 9) // Checks input is valid: M/B and row/column between 0-9.
+            if (Row < 0 || Row > 9)
             {
                 Console.WriteLine("Invalid row. Please enter a row between 0 and 9.");
                 GetRowColumn(ref Row, ref Column, ref Mtype);
             }
-            else if (Column < 0 || Column > 9)
+            else if (Mtype != "T" && (Column < 0 || Column > 9))
             {
                 Console.WriteLine("Invalid column. Please enter a column between 0 and 9.");
                 GetRowColumn(ref Row, ref Column, ref Mtype);
             }
-            else if (Mtype != "M" && Mtype != "B")
+            else if (Mtype != "M" && Mtype != "B" && Mtype != "T")
             {
-                Console.WriteLine("Invalid type. Please enter 'M' for missile or 'B' for bomb.");
+                Console.WriteLine("Invalid type. Please enter M, B or T.");
                 GetRowColumn(ref Row, ref Column, ref Mtype);
             }
         }
@@ -62,7 +73,9 @@ namespace OOP_Warships
 
         private static void PlayGame(ref GameBoard Board)
         {
+            bool TorpedoUsed = false;
             bool GameWon = false;
+            bool BombUsed = false;
             int row=0;
             int col=0;
             string Wtype="";
@@ -77,8 +90,31 @@ namespace OOP_Warships
                 }
                 if (Wtype == "B")
                 {
-                    Bomb MyBomb = new Bomb();
-                    MyBomb.Fire(row, col, Board);
+                    if (BombUsed == false)
+                    {
+                        Bomb MyBomb = new Bomb();
+                        MyBomb.Fire(row, col, Board);
+
+                        BombUsed = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Bomb has already been used.");
+                    }
+                }
+                if (Wtype == "T")
+                {
+                    if (TorpedoUsed == false)
+                    {
+                        Torpedo MyTorpedo = new Torpedo();
+                        MyTorpedo.Fire(row, col, Board);
+
+                        TorpedoUsed = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Torpedo has already been used.");
+                    }
                 }
                 if (Board.CheckWin() == true)
                     {
@@ -485,7 +521,7 @@ namespace OOP_Warships
             return _HitCount;
         }
 
-        public void AddHit()
+        public void AddHit() 
         {
             _HitCount++;
         }
@@ -500,6 +536,16 @@ namespace OOP_Warships
             _Size = ShipSize;
         }
 
+    }
+    class Torpedo : Missile
+    {
+        public override void Fire(int row, int col, GameBoard Board)
+        {
+            for (int Column = 0; Column < 10; Column++)
+            {
+                Board.CheckLocation(row, Column);
+            }
+        }
     }
 
 }
